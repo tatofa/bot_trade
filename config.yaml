@@ -1,7 +1,7 @@
 mode: paper
 symbols:
-  - BTCUSDT
-  - ETHUSDT
+  - BTC-USDT
+  - ETH-USDT
 signal_timeframe: 15m
 trend_timeframe: 1h
 
@@ -16,8 +16,8 @@ risk:
 execution:
   margin_mode: isolated
   leverage:
-    BTCUSDT: 4
-    ETHUSDT: 3
+    BTC-USDT: 4
+    ETH-USDT: 3
   stop_atr_mult: 1.5
   partial_tp_r: 1.0
   final_tp_r: 2.0

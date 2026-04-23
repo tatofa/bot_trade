@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from typing import Any
 
 import pandas as pd
 
@@ -16,22 +17,62 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("bot_trade")
 
 
-def klines_to_df(payload: dict) -> pd.DataFrame:
-    rows = payload.get("data", [])
-    df = pd.DataFrame(rows)
-    if df.empty:
-        return df
+def _normalize_symbol_candidates(symbol: str) -> list[str]:
+    """Try common BingX symbol formats.
 
-    col_map = {
-        "open": "open",
-        "high": "high",
-        "low": "low",
-        "close": "close",
-        "volume": "volume",
-    }
+    Examples:
+    - BTCUSDT -> BTC-USDT
+    - ETH-USDT -> ETHUSDT
+    """
+    candidates = [symbol]
+    if "-" in symbol:
+        candidates.append(symbol.replace("-", ""))
+    elif symbol.endswith("USDT"):
+        candidates.append(symbol.replace("USDT", "-USDT"))
+    return list(dict.fromkeys(candidates))
+
+
+def klines_to_df(payload: dict[str, Any]) -> pd.DataFrame:
+    rows = payload.get("data", [])
+    if not rows:
+        return pd.DataFrame()
+
+    if isinstance(rows[0], dict):
+        df = pd.DataFrame(rows)
+        col_map = {
+            "open": "open",
+            "high": "high",
+            "low": "low",
+            "close": "close",
+            "volume": "volume",
+        }
+    elif isinstance(rows[0], (list, tuple)) and len(rows[0]) >= 6:
+        # Common exchange schema: [time, open, high, low, close, volume, ...]
+        df = pd.DataFrame(rows)
+        col_map = {1: "open", 2: "high", 3: "low", 4: "close", 5: "volume"}
+    else:
+        return pd.DataFrame()
+
     for source, target in col_map.items():
+        if source not in df.columns:
+            return pd.DataFrame()
         df[target] = pd.to_numeric(df[source], errors="coerce")
+
     return df[["open", "high", "low", "close", "volume"]].dropna()
+
+
+def fetch_klines_with_fallback(
+    client: BingXClient,
+    symbol: str,
+    interval: str,
+    limit: int = 500,
+) -> tuple[str, pd.DataFrame]:
+    for candidate in _normalize_symbol_candidates(symbol):
+        payload = client.get_klines(candidate, interval=interval, limit=limit)
+        df = klines_to_df(payload)
+        if not df.empty:
+            return candidate, df
+    return symbol, pd.DataFrame()
 
 
 def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
@@ -44,10 +85,18 @@ def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
             logger.info("%s skipped: already has position", symbol)
             continue
 
-        df_15m = klines_to_df(client.get_klines(symbol, settings.get("signal_timeframe", "15m")))
-        df_1h = klines_to_df(client.get_klines(symbol, settings.get("trend_timeframe", "1h")))
+        resolved_symbol, df_15m = fetch_klines_with_fallback(
+            client,
+            symbol=symbol,
+            interval=settings.get("signal_timeframe", "15m"),
+        )
+        _, df_1h = fetch_klines_with_fallback(
+            client,
+            symbol=symbol,
+            interval=settings.get("trend_timeframe", "1h"),
+        )
         if df_15m.empty or df_1h.empty:
-            logger.warning("%s skipped: no market data", symbol)
+            logger.warning("%s skipped: no market data (check symbol format: BTC-USDT/ETH-USDT)", symbol)
             continue
 
         signal = generate_signal(df_15m, df_1h, filters)
@@ -77,13 +126,14 @@ def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
 
         paper.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
         logger.info(
-            "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f",
+            "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f source_symbol=%s",
             symbol,
             signal.side,
             qty,
             current_price,
             levels["stop"],
             levels["take_profit"],
+            resolved_symbol,
         )
 
 
