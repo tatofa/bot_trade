@@ -79,7 +79,6 @@ Si pones `BOT_MODE=live` pero olvidas `ENABLE_LIVE_TRADING=true` (o faltan keys)
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
 - ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.
 
-
 ## Ajuste de señales (para que no quede siempre en no_signal)
 
 Por defecto ahora usa `entry_mode: cross_or_trend` (más frecuente).
@@ -94,7 +93,7 @@ Si en logs sale `no_signal:{...}` ahora verás diagnóstico con el motivo exacto
 ## Errores comunes
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
-- `Live mode blocked`: activa `ENABLE_LIVE_TRADING=true` además de `BOT_MODE=live`.
+- `live fallback`: si falta confirmación o credenciales en live, el bot vuelve a `paper` y lo registra en logs.
 - `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
 
 ## Nota de riesgo
