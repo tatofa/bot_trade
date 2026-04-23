@@ -36,13 +36,7 @@ class BingXClient:
             params["timestamp"] = int(time.time() * 1000)
             params["signature"] = self._sign(params)
 
-        response = requests.request(
-            method,
-            f"{self.base_url}{endpoint}",
-            params=params,
-            headers=headers,
-            timeout=15,
-        )
+        response = requests.request(method, f"{self.base_url}{endpoint}", params=params, headers=headers, timeout=15)
         response.raise_for_status()
         payload = response.json()
         return self._ensure_success(payload, endpoint)
@@ -74,6 +68,7 @@ class BingXClient:
         }
         payload = self._request("POST", "/openApi/swap/v2/trade/order", params)
         data = payload.get("data", {}) if isinstance(payload.get("data", {}), dict) else {}
+        # Optional safety check: if API accepted but no order id details, raise explicit error.
         if not any(k in data for k in ("orderId", "clientOrderId", "orderID")):
             raise RuntimeError(f"BingX order response missing order id: {payload}")
         return payload
