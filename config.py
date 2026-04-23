@@ -22,7 +22,10 @@ class RuntimeConfig:
 def _as_bool(value: str | None, default: bool = False) -> bool:
     if value is None:
         return default
-    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+    normalized = value.strip().lower()
+    if normalized == "":
+        return default
+    return normalized in {"1", "true", "yes", "y", "on"}
 
 
 def load_config(config_path: str = "config.yaml") -> RuntimeConfig:
