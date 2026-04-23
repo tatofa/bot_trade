@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import pandas as pd
 
 
@@ -35,6 +36,24 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return true_range.rolling(period).mean()
 
 
+
+
+def _cross_in_last_n_bars(fast: pd.Series, slow: pd.Series, n: int, direction: str) -> bool:
+    if len(fast) < n + 1 or len(slow) < n + 1:
+        return False
+    start = -1 - n
+    f = fast.iloc[start:]
+    s = slow.iloc[start:]
+    for i in range(1, len(f)):
+        prev_f, prev_s = f.iloc[i - 1], s.iloc[i - 1]
+        curr_f, curr_s = f.iloc[i], s.iloc[i]
+        if direction == "up" and prev_f <= prev_s and curr_f > curr_s:
+            return True
+        if direction == "down" and prev_f >= prev_s and curr_f < curr_s:
+            return True
+    return False
+
+
 def build_exit_prices(entry_price: float, side: str, tp_pct: float, sl_pct: float) -> tuple[float, float]:
     if side == "long":
         tp_price = entry_price * (1 + tp_pct)
@@ -48,7 +67,6 @@ def build_exit_prices(entry_price: float, side: str, tp_pct: float, sl_pct: floa
 def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict) -> Signal:
     min_entry_rows = int(params.get("min_entry_rows", 60))
     min_trend_rows = int(params.get("min_trend_rows", 80))
-
     if len(df_entry) < min_entry_rows or len(df_trend) < min_trend_rows:
         return Signal(side=None, reason="insufficient_data")
 
@@ -68,7 +86,6 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
     ema_fast = ema(close_entry, ema_fast_period)
     ema_slow = ema(close_entry, ema_slow_period)
     ema_trend = ema(close_trend, ema_trend_period)
-
     rsi_now = float(rsi(close_entry, rsi_period).iloc[-1])
 
     volume_ma = df_entry["volume"].rolling(volume_ma_period).mean()
@@ -76,15 +93,32 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
 
     trend_price = float(close_trend.iloc[-1])
     trend_ema_value = float(ema_trend.iloc[-1])
-
     trend_gap = abs(trend_price - trend_ema_value) / max(trend_price, 1e-12)
 
     trend_up = trend_price > trend_ema_value
     trend_down = trend_price < trend_ema_value
     trend_has_impulse = trend_gap >= min_trend_gap_pct
 
-    long_trigger = ema_fast.iloc[-2] <= ema_slow.iloc[-2] and ema_fast.iloc[-1] > ema_slow.iloc[-1]
-    short_trigger = ema_fast.iloc[-2] >= ema_slow.iloc[-2] and ema_fast.iloc[-1] < ema_slow.iloc[-1]
+    trigger_mode = params.get("trigger_mode", "cross_or_alignment")
+    cross_lookback = int(params.get("cross_lookback", 3))
+
+    long_cross_now = ema_fast.iloc[-2] <= ema_slow.iloc[-2] and ema_fast.iloc[-1] > ema_slow.iloc[-1]
+    short_cross_now = ema_fast.iloc[-2] >= ema_slow.iloc[-2] and ema_fast.iloc[-1] < ema_slow.iloc[-1]
+    long_cross_recent = _cross_in_last_n_bars(ema_fast, ema_slow, cross_lookback, "up")
+    short_cross_recent = _cross_in_last_n_bars(ema_fast, ema_slow, cross_lookback, "down")
+
+    long_alignment = ema_fast.iloc[-1] > ema_slow.iloc[-1] and ema_fast.iloc[-1] >= ema_fast.iloc[-2]
+    short_alignment = ema_fast.iloc[-1] < ema_slow.iloc[-1] and ema_fast.iloc[-1] <= ema_fast.iloc[-2]
+
+    if trigger_mode == "cross_only":
+        long_trigger = long_cross_now
+        short_trigger = short_cross_now
+    elif trigger_mode == "cross_recent":
+        long_trigger = long_cross_recent
+        short_trigger = short_cross_recent
+    else:
+        long_trigger = long_cross_recent or long_alignment
+        short_trigger = short_cross_recent or short_alignment
 
     rsi_ok_long = rsi_now > float(params.get("rsi_long_threshold", 50))
     rsi_ok_short = rsi_now < float(params.get("rsi_short_threshold", 50))
@@ -104,6 +138,7 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
         "rsi_ok_short": bool(rsi_ok_short),
         "vol_ok": bool(vol_ok),
         "trend_gap_pct": round(trend_gap, 5),
+        "trigger_mode": trigger_mode,
     }
 
     entry_price = float(close_entry.iloc[-1])
