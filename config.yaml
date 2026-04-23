@@ -1,0 +1,33 @@
+mode: paper
+symbols:
+  - BTC-USDT
+  - ETH-USDT
+signal_timeframe: 15m
+trend_timeframe: 1h
+
+risk:
+  account_size_usdt: 1000
+  risk_per_trade: 0.0075
+  daily_loss_limit: 0.025
+  max_open_positions: 2
+  max_consecutive_losses: 3
+  max_position_loss_on_margin: 0.08
+
+execution:
+  margin_mode: isolated
+  leverage:
+    BTC-USDT: 4
+    ETH-USDT: 3
+  stop_atr_mult: 1.5
+  partial_tp_r: 1.0
+  final_tp_r: 2.0
+  trailing_start_r: 1.0
+  trailing_atr_mult: 1.0
+
+filters:
+  rsi_long_min: 50
+  rsi_long_max: 68
+  rsi_short_min: 32
+  rsi_short_max: 50
+  volume_ma_period: 20
+  spread_max_bps: 8
