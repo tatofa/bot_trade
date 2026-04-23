@@ -38,7 +38,9 @@ def load_config(config_path: str = "config.yaml") -> RuntimeConfig:
     api_key = os.getenv("BINGX_API_KEY", "")
     api_secret = os.getenv("BINGX_API_SECRET", "")
     live_enabled_raw = os.getenv("ENABLE_LIVE_TRADING", "")
-    live_enabled = _as_bool(live_enabled_raw, default=False)
+    # If BOT_MODE=live and ENABLE_LIVE_TRADING is omitted, assume enabled for smoother Railway setup.
+    live_enabled_default = mode.strip().lower() == "live"
+    live_enabled = _as_bool(live_enabled_raw, default=live_enabled_default)
 
     return RuntimeConfig(
         mode=mode,

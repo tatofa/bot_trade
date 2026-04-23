@@ -22,6 +22,8 @@ def _resolve_log_level() -> int:
 logging.basicConfig(level=_resolve_log_level(), format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("bot_trade")
 
+LAST_SIGNAL_REASON: dict[str, str] = {}
+
 
 def _normalize_symbol_candidates(symbol: str) -> list[str]:
     """Try common BingX symbol formats.
@@ -107,7 +109,12 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
 
         signal = generate_signal(df_15m, df_1h, filters)
         if not signal.side:
-            logger.info("%s no signal (%s)", symbol, signal.reason)
+            previous_reason = LAST_SIGNAL_REASON.get(symbol)
+            LAST_SIGNAL_REASON[symbol] = signal.reason
+            if previous_reason != signal.reason:
+                logger.info("%s no signal (%s)", symbol, signal.reason)
+            else:
+                logger.debug("%s no signal unchanged", symbol)
             continue
 
         current_price = float(df_15m["close"].iloc[-1])
@@ -131,6 +138,7 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
             continue
 
         executor.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
+        LAST_SIGNAL_REASON.pop(symbol, None)
         logger.info(
             "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f source_symbol=%s",
             symbol,

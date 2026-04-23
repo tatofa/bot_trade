@@ -67,14 +67,14 @@ git push -u origin <TU_RAMA>
 
 ## Estado actual de ejecución real
 
-Para operar real necesitas **las dos** variables:
-- `BOT_MODE=live`
-- `ENABLE_LIVE_TRADING=true`
+Para operar real basta con `BOT_MODE=live`.
+
+`ENABLE_LIVE_TRADING=true` es opcional y recomendado como confirmación explícita.
+Si lo dejas vacío y `BOT_MODE=live`, el bot habilita live igual (comportamiento pensado para Railway).
 
 `LOG_LEVEL` no activa trading; solo controla verbosidad del log.
 
-Si pones `BOT_MODE=live` pero olvidas `ENABLE_LIVE_TRADING=true` (o faltan keys), el bot **ya no crashea**: hace fallback automático a `paper` y deja warning en logs.
-En Railway, define `ENABLE_LIVE_TRADING` exactamente como `true` (minúscula, sin comillas).
+Si faltan keys en live, el bot hace fallback automático a `paper` y deja warning en logs.
 
 - ✅ En `paper`: simula entradas internamente.
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
