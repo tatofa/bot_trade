@@ -2,10 +2,11 @@
 
 Bot en Python para BingX Futures con señales de tendencia para `BTC-USDT` y `ETH-USDT`.
 
-> Importante: por seguridad, el modo por defecto es **paper**. Para ejecutar órdenes reales debes activar explícitamente `BOT_MODE=live` y `ENABLE_LIVE_TRADING=true`.
+> Importante: por seguridad, el modo por defecto es **paper**.
 
 ## Estructura
 
+- `run_bot.py`: preflight (detecta conflictos de merge) + arranque.
 - `main.py`: loop principal.
 - `config.py`: carga `.env` + `config.yaml`.
 - `exchange_bingx.py`: cliente HTTP para BingX (market data + orden market).
@@ -43,7 +44,7 @@ ENABLE_LIVE_TRADING=false
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python main.py
+python run_bot.py
 ```
 
 ## 3) Subir al repo de GitHub
@@ -63,49 +64,30 @@ git push -u origin <TU_RAMA>
    - `BOT_MODE` (`paper` o `live`)
    - `ENABLE_LIVE_TRADING` (`false` o `true`)
    - `LOG_LEVEL` (`INFO`, `WARNING`, `ERROR`, `DEBUG`)
-4. Railway usará `python main.py`.
+4. Railway usará `python run_bot.py`.
 
 ## Estado actual de ejecución real
 
-Para operar real basta con `BOT_MODE=live`.
+- `BOT_MODE=live` habilita modo live.
+- Si faltan keys en live, el bot hace fallback automático a `paper` y deja warning en logs.
+- `LOG_LEVEL` solo controla verbosidad.
 
-`ENABLE_LIVE_TRADING=true` es opcional y recomendado como confirmación explícita.
-Si lo dejas vacío y `BOT_MODE=live`, el bot habilita live igual (comportamiento pensado para Railway).
-
-`LOG_LEVEL` no activa trading; solo controla verbosidad del log.
-
-Si faltan keys en live, el bot hace fallback automático a `paper` y deja warning en logs.
-
-- ✅ En `paper`: simula entradas internamente.
-- ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
-- ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.
-
-## Ajuste de señales (para que no quede siempre en no_signal)
+## Ajuste de señales (scalping)
 
 En `config.yaml` puedes ajustar:
-- `filters.ema_fast` / `filters.ema_slow` para sensibilidad del cruce en 1m.
-- `filters.ema_trend` y `filters.min_trend_gap_pct` para filtrar lateralidad.
-- `filters.require_volume_confirmation` para exigir confirmación por volumen.
-- `filters.rsi_long_threshold` / `filters.rsi_short_threshold` para confirmar momentum.
-
-Si en logs sale `no_signal:{...}` verás diagnóstico con tendencia, setup, trigger, RSI y volumen.
+- `entry_timeframe` y `trend_timeframe`.
+- `filters.ema_fast` / `filters.ema_slow`.
+- `filters.ema_trend` y `filters.min_trend_gap_pct`.
+- `filters.require_volume_confirmation`.
+- `filters.rsi_long_threshold` / `filters.rsi_short_threshold`.
+- `execution.take_profit_pct` / `execution.stop_loss_pct`.
 
 ## Errores comunes
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
-- `live fallback`: si falta confirmación o credenciales en live, el bot vuelve a `paper` y lo registra en logs.
 - `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
+- `merge conflict markers detected`: elimina `<<<<<<<`, `=======`, `>>>>>>>` del archivo indicado.
 
 ## Nota de riesgo
 
 Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes de operar en real.
-
-
-## Estrategia scalping (actual)
-
-- Timeframe entrada: `1m` (`entry_timeframe`).
-- Timeframe tendencia: `5m` (`trend_timeframe`).
-- Trigger entrada: cruce EMA `9/21` en 1m.
-- Filtro tendencia: precio vs EMA `50` en 5m.
-- Filtros extra: RSI (>50 long, <50 short), volumen > media y gap mínimo vs EMA de tendencia.
-- Salidas: `take_profit_pct` y `stop_loss_pct` porcentuales por operación.
