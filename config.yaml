@@ -25,9 +25,11 @@ execution:
   trailing_atr_mult: 1.0
 
 filters:
-  rsi_long_min: 50
-  rsi_long_max: 68
-  rsi_short_min: 32
-  rsi_short_max: 50
+  entry_mode: cross_or_trend # cross_only | cross_or_trend
+  rsi_long_min: 45
+  rsi_long_max: 75
+  rsi_short_min: 25
+  rsi_short_max: 55
   volume_ma_period: 20
+  require_volume_confirmation: false
   spread_max_bps: 8

@@ -70,6 +70,21 @@ git push -u origin <TU_RAMA>
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
 - ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.
 
+<<<<<<< codex/develop-btc-and-eth-trading-bot-lgs15i
+
+## Ajuste de señales (para que no quede siempre en no_signal)
+
+Por defecto ahora usa `entry_mode: cross_or_trend` (más frecuente).
+
+En `config.yaml` puedes ajustar:
+- `filters.entry_mode`: `cross_only` (estricto) o `cross_or_trend` (más activo).
+- `filters.require_volume_confirmation`: `true` para filtrar más, `false` para permitir más entradas.
+- Rango RSI (`rsi_long_*`, `rsi_short_*`) para ampliar/reducir frecuencia.
+
+Si en logs sale `no_signal:{...}` ahora verás diagnóstico con el motivo exacto (tendencia, trigger, RSI, volumen).
+
+=======
+>>>>>>> main
 ## Errores comunes
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
