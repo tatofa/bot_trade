@@ -73,6 +73,8 @@ Para operar real necesitas **las dos** variables:
 
 `LOG_LEVEL` no activa trading; solo controla verbosidad del log.
 
+Si pones `BOT_MODE=live` pero olvidas `ENABLE_LIVE_TRADING=true` (o faltan keys), el bot **ya no crashea**: hace fallback automático a `paper` y deja warning en logs.
+
 - ✅ En `paper`: simula entradas internamente.
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
 - ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.

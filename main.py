@@ -148,10 +148,19 @@ def main() -> None:
     client = BingXClient(api_key=cfg.api_key, api_secret=cfg.api_secret)
     if cfg.mode == "live":
         if not cfg.live_enabled:
-            raise RuntimeError("Live mode blocked. Set ENABLE_LIVE_TRADING=true to confirm.")
-        if not cfg.api_key or not cfg.api_secret:
-            raise RuntimeError("Live mode requires BINGX_API_KEY and BINGX_API_SECRET.")
-        executor: Executor = LiveExecutor(client=client)
+            logger.warning(
+                "Live mode requested but ENABLE_LIVE_TRADING!=true. Falling back to paper mode."
+            )
+            executor = PaperExecutor()
+            cfg.mode = "paper"
+        elif not cfg.api_key or not cfg.api_secret:
+            logger.warning(
+                "Live mode requested but missing API credentials. Falling back to paper mode."
+            )
+            executor = PaperExecutor()
+            cfg.mode = "paper"
+        else:
+            executor = LiveExecutor(client=client)
     else:
         executor = PaperExecutor()
 
