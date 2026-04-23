@@ -86,7 +86,7 @@ En `config.yaml` puedes ajustar:
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
 - `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
-- `merge conflict markers detected`: elimina `<<<<<<<`, `=======`, `>>>>>>>` del archivo indicado.
+- `merge conflict markers detected`: elimina los marcadores de conflicto de Git del archivo indicado.
 
 ## Nota de riesgo
 

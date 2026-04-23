@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-CONFLICT_MARKERS = ("<<<<<<<", "=======", ">>>>>>>")
+CONFLICT_MARKERS = ("<" * 7, "=" * 7, ">" * 7)
 
 
 def check_merge_conflicts(root: Path) -> list[tuple[Path, int, str]]:
@@ -22,7 +22,7 @@ def check_merge_conflicts(root: Path) -> list[tuple[Path, int, str]]:
 def main() -> None:
     findings = check_merge_conflicts(Path("."))
     if findings:
-        print("ERROR: merge conflict markers detected. Fix before starting bot:")
+        print("ERROR: Git merge conflict markers detected. Fix before starting bot:")
         for file, lineno, line in findings:
             print(f" - {file}:{lineno}: {line}")
         raise SystemExit(2)
