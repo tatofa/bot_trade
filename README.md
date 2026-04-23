@@ -87,18 +87,12 @@ En `config.yaml` puedes ajustar:
 ## Errores comunes
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xmd0au
+- `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno. El cliente reintenta una firma alternativa si recibe `code=100001`.
+- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
+- `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
 - `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno.
 - `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
 - `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
-=======
-- `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
-- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
-- `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
-- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
-- `merge conflict markers detected`: elimina los marcadores de conflicto de Git del archivo indicado.
-
->>>>>>> main
 
 ## Nota de riesgo
 

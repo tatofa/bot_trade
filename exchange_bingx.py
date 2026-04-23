@@ -16,12 +16,8 @@ class BingXClient:
     api_secret: str
     base_url: str = "https://open-api.bingx.com"
 
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xmd0au
     def _sign_query(self, query: str) -> str:
-=======
-    def _sign(self, params: dict[str, Any]) -> str:
-        query = urlencode(sorted(params.items()))
->>>>>>> main
+    def _sign_query(self, query: str) -> str:
         return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
 
     def _ensure_success(self, payload: dict[str, Any], endpoint: str) -> dict[str, Any]:
@@ -37,7 +33,10 @@ class BingXClient:
         headers = {"X-BX-APIKEY": self.api_key} if self.api_key else {}
 
         if self.api_key and self.api_secret:
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xmd0au
+            signed_params = dict(params)
+            signed_params["timestamp"] = int(time.time() * 1000)
+            # Sign and send with identical insertion order to match BingX examples.
+            query = urlencode(list(signed_params.items()))
             signed_params = dict(params)
             signed_params["timestamp"] = int(time.time() * 1000)
             # Keep the exact same ordering for signed string and transmitted query.
@@ -49,12 +48,19 @@ class BingXClient:
         else:
             response = requests.request(method, f"{self.base_url}{endpoint}", params=params, headers=headers, timeout=15)
 
-=======
-            params["timestamp"] = int(time.time() * 1000)
-            params["signature"] = self._sign(params)
+        response.raise_for_status()
+        payload = response.json()
+        return self._ensure_success(payload, endpoint)
 
-        response = requests.request(method, f"{self.base_url}{endpoint}", params=params, headers=headers, timeout=15)
->>>>>>> main
+
+    def _request_signed_sorted(self, method: str, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
+        headers = {"X-BX-APIKEY": self.api_key} if self.api_key else {}
+        signed_params = dict(params)
+        signed_params["timestamp"] = int(time.time() * 1000)
+        query = urlencode(sorted(signed_params.items(), key=lambda kv: kv[0]))
+        signature = self._sign_query(query)
+        url = f"{self.base_url}{endpoint}?{query}&signature={signature}"
+        response = requests.request(method, url, headers=headers, timeout=15)
         response.raise_for_status()
         payload = response.json()
         return self._ensure_success(payload, endpoint)
@@ -84,12 +90,14 @@ class BingXClient:
             "type": order_type,
             "quantity": f"{quantity:.6f}",
         }
-        payload = self._request("POST", "/openApi/swap/v2/trade/order", params)
+        try:
+            payload = self._request("POST", "/openApi/swap/v2/trade/order", params)
+        except RuntimeError as exc:
+            if "code=100001" in str(exc):
+                payload = self._request_signed_sorted("POST", "/openApi/swap/v2/trade/order", params)
+            else:
+                raise
         data = payload.get("data", {}) if isinstance(payload.get("data", {}), dict) else {}
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xmd0au
-=======
-        # Optional safety check: if API accepted but no order id details, raise explicit error.
->>>>>>> main
         if not any(k in data for k in ("orderId", "clientOrderId", "orderID")):
             raise RuntimeError(f"BingX order response missing order id: {payload}")
         return payload
