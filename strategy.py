@@ -88,11 +88,11 @@ def generate_signal(df_15m: pd.DataFrame, df_1h: pd.DataFrame, params: dict) -> 
         return Signal(side="short", reason=f"short:{entry_mode}:rsi={rsi_now:.1f}")
 
     diagnostics = {
-        "trend_up": trend_up,
-        "trend_down": trend_down,
-        "long_trigger": long_trigger,
-        "short_trigger": short_trigger,
-        "vol_ok": vol_ok,
+        "trend_up": bool(trend_up),
+        "trend_down": bool(trend_down),
+        "long_trigger": bool(long_trigger),
+        "short_trigger": bool(short_trigger),
+        "vol_ok": bool(vol_ok),
         "rsi": round(rsi_now, 1),
     }
     return Signal(side=None, reason=f"no_signal:{diagnostics}")

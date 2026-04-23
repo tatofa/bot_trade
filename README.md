@@ -62,15 +62,22 @@ git push -u origin <TU_RAMA>
    - `BINGX_API_SECRET`
    - `BOT_MODE` (`paper` o `live`)
    - `ENABLE_LIVE_TRADING` (`false` o `true`)
+   - `LOG_LEVEL` (`INFO`, `WARNING`, `ERROR`, `DEBUG`)
 4. Railway usará `python main.py`.
 
 ## Estado actual de ejecución real
 
+Para operar real necesitas **las dos** variables:
+- `BOT_MODE=live`
+- `ENABLE_LIVE_TRADING=true`
+
+`LOG_LEVEL` no activa trading; solo controla verbosidad del log.
+
+Si pones `BOT_MODE=live` pero olvidas `ENABLE_LIVE_TRADING=true` (o faltan keys), el bot **ya no crashea**: hace fallback automático a `paper` y deja warning en logs.
+
 - ✅ En `paper`: simula entradas internamente.
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
 - ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.
-
-<<<<<<< codex/develop-btc-and-eth-trading-bot-lgs15i
 
 ## Ajuste de señales (para que no quede siempre en no_signal)
 
@@ -83,12 +90,10 @@ En `config.yaml` puedes ajustar:
 
 Si en logs sale `no_signal:{...}` ahora verás diagnóstico con el motivo exacto (tendencia, trigger, RSI, volumen).
 
-=======
->>>>>>> main
 ## Errores comunes
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
-- `Live mode blocked`: activa `ENABLE_LIVE_TRADING=true` además de `BOT_MODE=live`.
+- `live fallback`: si falta confirmación o credenciales en live, el bot vuelve a `paper` y lo registra en logs.
 - `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
 
 ## Nota de riesgo
