@@ -90,6 +90,9 @@ En `config.yaml` puedes ajustar:
 - `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno. El cliente reintenta una firma alternativa si recibe `code=100001`.
 - `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
 - `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
+- `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno.
+- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
+- `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
 
 ## Nota de riesgo
 

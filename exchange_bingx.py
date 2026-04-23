@@ -17,6 +17,7 @@ class BingXClient:
     base_url: str = "https://open-api.bingx.com"
 
     def _sign_query(self, query: str) -> str:
+    def _sign_query(self, query: str) -> str:
         return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
 
     def _ensure_success(self, payload: dict[str, Any], endpoint: str) -> dict[str, Any]:
@@ -36,6 +37,11 @@ class BingXClient:
             signed_params["timestamp"] = int(time.time() * 1000)
             # Sign and send with identical insertion order to match BingX examples.
             query = urlencode(list(signed_params.items()))
+            signed_params = dict(params)
+            signed_params["timestamp"] = int(time.time() * 1000)
+            # Keep the exact same ordering for signed string and transmitted query.
+            ordered_items = sorted(signed_params.items(), key=lambda kv: kv[0])
+            query = urlencode(ordered_items)
             signature = self._sign_query(query)
             url = f"{self.base_url}{endpoint}?{query}&signature={signature}"
             response = requests.request(method, url, headers=headers, timeout=15)
