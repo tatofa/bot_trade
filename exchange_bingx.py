@@ -20,7 +20,6 @@ class BingXClient:
         query = urlencode(sorted(params.items()))
         return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
 
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xxj5jv
     def _ensure_success(self, payload: dict[str, Any], endpoint: str) -> dict[str, Any]:
         """Raise when BingX returns business-level error despite HTTP 200."""
         code = payload.get("code")
@@ -29,8 +28,6 @@ class BingXClient:
         msg = payload.get("msg") or payload.get("message") or "unknown_error"
         raise RuntimeError(f"BingX API error on {endpoint}: code={code} msg={msg}")
 
-=======
->>>>>>> main
     def _request(self, method: str, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         params = params or {}
         headers = {"X-BX-APIKEY": self.api_key} if self.api_key else {}
@@ -39,14 +36,16 @@ class BingXClient:
             params["timestamp"] = int(time.time() * 1000)
             params["signature"] = self._sign(params)
 
-        response = requests.request(method, f"{self.base_url}{endpoint}", params=params, headers=headers, timeout=15)
+        response = requests.request(
+            method,
+            f"{self.base_url}{endpoint}",
+            params=params,
+            headers=headers,
+            timeout=15,
+        )
         response.raise_for_status()
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xxj5jv
         payload = response.json()
         return self._ensure_success(payload, endpoint)
-=======
-        return response.json()
->>>>>>> main
 
     def server_time(self) -> dict[str, Any]:
         return self._request("GET", "/openApi/swap/v2/server/time")
@@ -73,13 +72,8 @@ class BingXClient:
             "type": order_type,
             "quantity": f"{quantity:.6f}",
         }
-<<<<<<< codex/develop-btc-and-eth-trading-bot-xxj5jv
         payload = self._request("POST", "/openApi/swap/v2/trade/order", params)
         data = payload.get("data", {}) if isinstance(payload.get("data", {}), dict) else {}
-        # Optional safety check: if API accepted but no order id details, raise explicit error.
         if not any(k in data for k in ("orderId", "clientOrderId", "orderID")):
             raise RuntimeError(f"BingX order response missing order id: {payload}")
         return payload
-=======
-        return self._request("POST", "/openApi/swap/v2/trade/order", params)
->>>>>>> main
