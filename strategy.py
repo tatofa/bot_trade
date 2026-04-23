@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 import pandas as pd
 
 
@@ -49,6 +48,7 @@ def build_exit_prices(entry_price: float, side: str, tp_pct: float, sl_pct: floa
 def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict) -> Signal:
     min_entry_rows = int(params.get("min_entry_rows", 60))
     min_trend_rows = int(params.get("min_trend_rows", 80))
+
     if len(df_entry) < min_entry_rows or len(df_trend) < min_trend_rows:
         return Signal(side=None, reason="insufficient_data")
 
@@ -68,6 +68,7 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
     ema_fast = ema(close_entry, ema_fast_period)
     ema_slow = ema(close_entry, ema_slow_period)
     ema_trend = ema(close_trend, ema_trend_period)
+
     rsi_now = float(rsi(close_entry, rsi_period).iloc[-1])
 
     volume_ma = df_entry["volume"].rolling(volume_ma_period).mean()
@@ -75,6 +76,7 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
 
     trend_price = float(close_trend.iloc[-1])
     trend_ema_value = float(ema_trend.iloc[-1])
+
     trend_gap = abs(trend_price - trend_ema_value) / max(trend_price, 1e-12)
 
     trend_up = trend_price > trend_ema_value
