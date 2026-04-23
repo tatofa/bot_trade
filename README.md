@@ -82,6 +82,15 @@ Si faltan keys en live, el bot hace fallback automático a `paper` y deja warnin
 
 ## Ajuste de señales (para que no quede siempre en no_signal)
 
+<<<<<<< codex/develop-btc-and-eth-trading-bot-n6yp5q
+En `config.yaml` puedes ajustar:
+- `filters.ema_fast` / `filters.ema_slow` para sensibilidad del cruce en 1m.
+- `filters.ema_trend` y `filters.min_trend_gap_pct` para filtrar lateralidad.
+- `filters.require_volume_confirmation` para exigir confirmación por volumen.
+- `filters.rsi_long_threshold` / `filters.rsi_short_threshold` para confirmar momentum.
+
+Si en logs sale `no_signal:{...}` verás diagnóstico con tendencia, setup, trigger, RSI y volumen.
+=======
 Por defecto ahora usa `entry_mode: cross_or_trend` (más frecuente).
 
 En `config.yaml` puedes ajustar:
@@ -90,6 +99,7 @@ En `config.yaml` puedes ajustar:
 - Rango RSI (`rsi_long_*`, `rsi_short_*`) para ampliar/reducir frecuencia.
 
 Si en logs sale `no_signal:{...}` ahora verás diagnóstico con el motivo exacto (tendencia, trigger, RSI, volumen).
+>>>>>>> main
 
 ## Errores comunes
 
@@ -100,3 +110,16 @@ Si en logs sale `no_signal:{...}` ahora verás diagnóstico con el motivo exacto
 ## Nota de riesgo
 
 Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes de operar en real.
+<<<<<<< codex/develop-btc-and-eth-trading-bot-n6yp5q
+
+
+## Estrategia scalping (actual)
+
+- Timeframe entrada: `1m` (`entry_timeframe`).
+- Timeframe tendencia: `5m` (`trend_timeframe`).
+- Trigger entrada: cruce EMA `9/21` en 1m.
+- Filtro tendencia: precio vs EMA `50` en 5m.
+- Filtros extra: RSI (>50 long, <50 short), volumen > media y gap mínimo vs EMA de tendencia.
+- Salidas: `take_profit_pct` y `stop_loss_pct` porcentuales por operación.
+=======
+>>>>>>> main

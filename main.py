@@ -96,18 +96,18 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
         resolved_symbol, df_15m = fetch_klines_with_fallback(
             client,
             symbol=symbol,
-            interval=settings.get("signal_timeframe", "15m"),
+            interval=settings.get("entry_timeframe", settings.get("signal_timeframe", "1m")),
         )
         _, df_1h = fetch_klines_with_fallback(
             client,
             symbol=symbol,
-            interval=settings.get("trend_timeframe", "1h"),
+            interval=settings.get("trend_timeframe", "5m"),
         )
         if df_15m.empty or df_1h.empty:
             logger.warning("%s skipped: no market data (check symbol format: BTC-USDT/ETH-USDT)", symbol)
             continue
 
-        signal = generate_signal(df_15m, df_1h, filters)
+        signal = generate_signal(df_15m, df_1h, {**filters, **execution})
         if not signal.side:
             previous_reason = LAST_SIGNAL_REASON.get(symbol)
             LAST_SIGNAL_REASON[symbol] = signal.reason
@@ -117,16 +117,24 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
                 logger.debug("%s no signal unchanged", symbol)
             continue
 
-        current_price = float(df_15m["close"].iloc[-1])
-        atr_value = float(atr(df_15m, 14).iloc[-1])
+        current_price = float(signal.entry_price or df_15m["close"].iloc[-1])
 
-        levels = stop_and_targets(
-            entry=current_price,
-            atr_value=atr_value,
-            side=signal.side,
-            stop_mult=float(execution.get("stop_atr_mult", 1.5)),
-            tp_r_final=float(execution.get("final_tp_r", 2.0)),
-        )
+        if signal.tp_price is not None and signal.sl_price is not None:
+            stop_distance = abs(current_price - signal.sl_price)
+            levels = {
+                "stop_distance": stop_distance,
+                "stop": float(signal.sl_price),
+                "take_profit": float(signal.tp_price),
+            }
+        else:
+            atr_value = float(atr(df_15m, 14).iloc[-1])
+            levels = stop_and_targets(
+                entry=current_price,
+                atr_value=atr_value,
+                side=signal.side,
+                stop_mult=float(execution.get("stop_atr_mult", 1.5)),
+                tp_r_final=float(execution.get("final_tp_r", 2.0)),
+            )
 
         qty = position_size_usdt(
             account_size=float(risk.get("account_size_usdt", 1000)),
