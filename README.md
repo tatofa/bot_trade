@@ -1,36 +1,41 @@
 # bot_trade
 
-Bot base en Python para **paper trading** en BingX Futures con señales de tendencia para `BTC-USDT` y `ETH-USDT`.
+Bot en Python para BingX Futures con señales de tendencia para `BTC-USDT` y `ETH-USDT`.
+
+> Importante: por seguridad, el modo por defecto es **paper**. Para ejecutar órdenes reales debes activar explícitamente `BOT_MODE=live` y `ENABLE_LIVE_TRADING=true`.
 
 ## Estructura
 
 - `main.py`: loop principal.
 - `config.py`: carga `.env` + `config.yaml`.
-- `exchange_bingx.py`: cliente HTTP para endpoints de BingX.
+- `exchange_bingx.py`: cliente HTTP para BingX (market data + orden market).
 - `strategy.py`: EMA/RSI/ATR y señal long/short.
 - `risk_manager.py`: sizing por riesgo y niveles SL/TP.
-- `executor.py`: ejecutor paper (sin órdenes reales).
+- `executor.py`: ejecutor paper y ejecutor live.
 - `config.yaml`: parámetros iniciales.
 - `.env.example`: variables de entorno.
 - `railway.json` + `Procfile`: despliegue en Railway.
 
 ## 1) Cargar API keys
 
-Crea tu `.env` local desde el ejemplo:
-
 ```bash
 cp .env.example .env
 ```
 
-Edita `.env` con tus credenciales reales:
+Edita `.env`:
 
 ```env
 BINGX_API_KEY=TU_API_KEY
 BINGX_API_SECRET=TU_API_SECRET
-BOT_MODE=paper
-```
 
-> Nota: para endpoint público de velas, a veces funciona sin key; para operar real necesitas keys activas.
+# paper (default)
+BOT_MODE=paper
+ENABLE_LIVE_TRADING=false
+
+# live (real)
+# BOT_MODE=live
+# ENABLE_LIVE_TRADING=true
+```
 
 ## 2) Arranque local
 
@@ -43,29 +48,34 @@ python main.py
 
 ## 3) Subir al repo de GitHub
 
-Si este repo no tiene remoto aún:
-
 ```bash
 git remote add origin <URL_DEL_REPO_GITHUB>
 git push -u origin <TU_RAMA>
 ```
 
-## 4) Vincular y desplegar en Railway
+## 4) Vincular Railway
 
-1. En Railway: **New Project** → **Deploy from GitHub repo**.
-2. Conecta tu cuenta de GitHub y selecciona este repositorio.
+1. Railway → **New Project** → **Deploy from GitHub repo**.
+2. Selecciona este repositorio.
 3. En Variables del servicio, agrega:
    - `BINGX_API_KEY`
    - `BINGX_API_SECRET`
-   - `BOT_MODE=paper`
-4. Railway detectará `railway.json` y usará `python main.py`.
-5. Revisa logs del worker para confirmar que el loop corre.
+   - `BOT_MODE` (`paper` o `live`)
+   - `ENABLE_LIVE_TRADING` (`false` o `true`)
+4. Railway usará `python main.py`.
+
+## Estado actual de ejecución real
+
+- ✅ En `paper`: simula entradas internamente.
+- ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
+- ⚠️ Aún falta cablear en exchange las órdenes de SL/TP/trailing como órdenes nativas separadas.
 
 ## Errores comunes
 
-- `no market data`: revisa formato de símbolo (`BTC-USDT`/`ETH-USDT`).
-- `signature` o `auth`: revisa API key/secret y permisos en BingX.
+- `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
+- `Live mode blocked`: activa `ENABLE_LIVE_TRADING=true` además de `BOT_MODE=live`.
+- `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
 
 ## Nota de riesgo
 
-Este proyecto es una base técnica y **no garantiza ganancias**. Antes de operar en real, ejecuta backtesting y paper trading prolongado.
+Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes de operar en real.

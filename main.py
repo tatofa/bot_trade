@@ -8,7 +8,7 @@ import pandas as pd
 
 from config import load_config
 from exchange_bingx import BingXClient
-from executor import PaperExecutor
+from executor import Executor, LiveExecutor, PaperExecutor
 from risk_manager import position_size_usdt, stop_and_targets
 from strategy import atr, generate_signal
 
@@ -75,13 +75,13 @@ def fetch_klines_with_fallback(
     return symbol, pd.DataFrame()
 
 
-def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
+def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
     risk = settings["risk"]
     execution = settings["execution"]
     filters = settings["filters"]
 
     for symbol in settings.get("symbols", []):
-        if paper.has_position(symbol):
+        if executor.has_position(symbol):
             logger.info("%s skipped: already has position", symbol)
             continue
 
@@ -124,7 +124,7 @@ def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
             logger.warning("%s skipped: invalid qty", symbol)
             continue
 
-        paper.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
+        executor.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
         logger.info(
             "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f source_symbol=%s",
             symbol,
@@ -140,12 +140,19 @@ def run_once(client: BingXClient, paper: PaperExecutor, settings: dict) -> None:
 def main() -> None:
     cfg = load_config()
     client = BingXClient(api_key=cfg.api_key, api_secret=cfg.api_secret)
-    paper = PaperExecutor()
+    if cfg.mode == "live":
+        if not cfg.live_enabled:
+            raise RuntimeError("Live mode blocked. Set ENABLE_LIVE_TRADING=true to confirm.")
+        if not cfg.api_key or not cfg.api_secret:
+            raise RuntimeError("Live mode requires BINGX_API_KEY and BINGX_API_SECRET.")
+        executor: Executor = LiveExecutor(client=client)
+    else:
+        executor = PaperExecutor()
 
     logger.info("Bot started in %s mode", cfg.mode)
     while True:
         try:
-            run_once(client, paper, cfg.settings)
+            run_once(client, executor, cfg.settings)
         except Exception as exc:  # noqa: BLE001
             logger.exception("Loop failed: %s", exc)
         time.sleep(30)

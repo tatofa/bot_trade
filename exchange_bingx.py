@@ -41,3 +41,20 @@ class BingXClient:
             "/openApi/swap/v3/quote/klines",
             {"symbol": symbol, "interval": interval, "limit": limit},
         )
+
+    def place_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        position_side: str,
+        order_type: str = "MARKET",
+    ) -> dict[str, Any]:
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "positionSide": position_side,
+            "type": order_type,
+            "quantity": f"{quantity:.6f}",
+        }
+        return self._request("POST", "/openApi/swap/v2/trade/order", params)
