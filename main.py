@@ -149,7 +149,8 @@ def main() -> None:
     if cfg.mode == "live":
         if not cfg.live_enabled:
             logger.warning(
-                "Live mode requested but ENABLE_LIVE_TRADING!=true. Falling back to paper mode."
+                "Live mode requested but ENABLE_LIVE_TRADING is '%s' (must be true). Falling back to paper mode.",
+                cfg.live_enabled_raw or "<empty>",
             )
             executor = PaperExecutor()
             cfg.mode = "paper"

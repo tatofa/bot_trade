@@ -15,6 +15,7 @@ class RuntimeConfig:
     api_key: str
     api_secret: str
     live_enabled: bool
+    live_enabled_raw: str
     settings: dict[str, Any]
 
 
@@ -36,12 +37,14 @@ def load_config(config_path: str = "config.yaml") -> RuntimeConfig:
     mode = os.getenv("BOT_MODE", settings.get("mode", "paper"))
     api_key = os.getenv("BINGX_API_KEY", "")
     api_secret = os.getenv("BINGX_API_SECRET", "")
-    live_enabled = _as_bool(os.getenv("ENABLE_LIVE_TRADING"), default=False)
+    live_enabled_raw = os.getenv("ENABLE_LIVE_TRADING", "")
+    live_enabled = _as_bool(live_enabled_raw, default=False)
 
     return RuntimeConfig(
         mode=mode,
         api_key=api_key,
         api_secret=api_secret,
         live_enabled=live_enabled,
+        live_enabled_raw=live_enabled_raw,
         settings=settings,
     )

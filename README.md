@@ -74,6 +74,7 @@ Para operar real necesitas **las dos** variables:
 `LOG_LEVEL` no activa trading; solo controla verbosidad del log.
 
 Si pones `BOT_MODE=live` pero olvidas `ENABLE_LIVE_TRADING=true` (o faltan keys), el bot **ya no crashea**: hace fallback automático a `paper` y deja warning en logs.
+En Railway, define `ENABLE_LIVE_TRADING` exactamente como `true` (minúscula, sin comillas).
 
 - ✅ En `paper`: simula entradas internamente.
 - ✅ En `live`: envía **orden market de entrada** vía API (`/openApi/swap/v2/trade/order`).
