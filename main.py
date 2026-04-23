@@ -145,7 +145,12 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
             logger.warning("%s skipped: invalid qty", symbol)
             continue
 
-        executor.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
+        try:
+            executor.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
+        except Exception as exc:  # noqa: BLE001
+            logger.error("%s order failed: %s", symbol, exc)
+            continue
+
         LAST_SIGNAL_REASON.pop(symbol, None)
         logger.info(
             "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f source_symbol=%s",

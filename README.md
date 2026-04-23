@@ -88,6 +88,10 @@ En `config.yaml` puedes ajustar:
 
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
 - `signature/auth`: revisa API key/secret y permisos de futuros en BingX.
+<<<<<<< codex/develop-btc-and-eth-trading-bot-xxj5jv
+- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
+=======
+>>>>>>> main
 - `merge conflict markers detected`: elimina los marcadores de conflicto de Git del archivo indicado.
 
 ## Nota de riesgo
