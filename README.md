@@ -90,10 +90,12 @@ En `config.yaml` puedes ajustar:
 - `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno. El cliente reintenta una firma alternativa si recibe `code=100001`.
 - `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
 - `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
-- `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno.
-- `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
-- `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
+
+## Build safety
+
+- El build del contenedor valida marcadores de conflicto y también compila `*.py` para cortar errores de sintaxis/indentación antes de deploy.
 
 ## Nota de riesgo
+
 
 Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes de operar en real.

@@ -18,4 +18,6 @@ for path in Path('/app').glob('*.py'):
 print('merge-marker check passed')
 PY
 
+RUN python -m py_compile *.py
+
 CMD ["python", "run_bot.py"]
