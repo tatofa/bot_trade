@@ -1,4 +1,4 @@
-mode: paper
+mode: live
 symbols:
   - BTC-USDT
   - ETH-USDT
@@ -8,11 +8,11 @@ trend_timeframe: 5m
 risk:
   account_size_usdt: 40
   risk_per_trade: 0.01
-  daily_loss_limit: 0.02
+  daily_loss_limit: 0.03
   max_open_positions: 2
-  max_consecutive_losses: 3
-  max_position_loss_on_margin: 0.05
-  max_margin_usage: 0.7
+  max_consecutive_losses: 4
+  max_position_loss_on_margin: 0.08
+  max_margin_usage: 0.95
 
 execution:
   margin_mode: isolated
@@ -21,9 +21,9 @@ execution:
     ETH-USDT: 10
   take_profit_pct: 0.006
   stop_loss_pct: 0.004
-  stop_atr_mult: 1.2
+  stop_atr_mult: 1.0
   partial_tp_r: 1.0
-  final_tp_r: 1.8
+  final_tp_r: 1.6
   trailing_start_r: 0.8
   trailing_atr_mult: 0.8
 
@@ -32,13 +32,13 @@ filters:
   ema_slow: 21
   ema_trend: 50
   trigger_mode: cross_or_alignment # cross_only | cross_recent | cross_or_alignment
-  cross_lookback: 3
+  cross_lookback: 5
   rsi_period: 14
-  rsi_long_threshold: 50
-  rsi_short_threshold: 50
+  rsi_long_threshold: 45
+  rsi_short_threshold: 55
   volume_ma_period: 20
   require_volume_confirmation: false
-  min_trend_gap_pct: 0.0005
-  min_entry_rows: 80
-  min_trend_rows: 100
-  spread_max_bps: 8
+  min_trend_gap_pct: 0.0001
+  min_entry_rows: 60
+  min_trend_rows: 80
+  spread_max_bps: 12
