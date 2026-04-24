@@ -20,12 +20,11 @@ class BingXClient:
         return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
 
     def _ensure_success(self, payload: dict[str, Any], endpoint: str) -> dict[str, Any]:
-        """Raise when BingX returns business-level error despite HTTP 200."""
         code = payload.get("code")
         if code in (0, "0", None):
             return payload
         msg = payload.get("msg") or payload.get("message") or "unknown_error"
-        raise RuntimeError(f"BingX API error on {endpoint}: code={code} msg={msg}")
+        raise RuntimeError(f"BingX API error on {endpoint}: code={code} msg={msg} payload={payload}")
 
     def _request(self, method: str, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         params = params or {}
@@ -34,7 +33,6 @@ class BingXClient:
         if self.api_key and self.api_secret:
             signed_params = dict(params)
             signed_params["timestamp"] = int(time.time() * 1000)
-            # Sign and send with identical insertion order to match BingX examples.
             query = urlencode(list(signed_params.items()))
             signature = self._sign_query(query)
             url = f"{self.base_url}{endpoint}?{query}&signature={signature}"
@@ -45,7 +43,6 @@ class BingXClient:
         response.raise_for_status()
         payload = response.json()
         return self._ensure_success(payload, endpoint)
-
 
     def _request_signed_sorted(self, method: str, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
         headers = {"X-BX-APIKEY": self.api_key} if self.api_key else {}
@@ -59,6 +56,14 @@ class BingXClient:
         payload = response.json()
         return self._ensure_success(payload, endpoint)
 
+    def _symbol_candidates(self, symbol: str) -> list[str]:
+        candidates = [symbol]
+        if "-" in symbol:
+            candidates.append(symbol.replace("-", ""))
+        elif symbol.endswith("USDT"):
+            candidates.append(symbol.replace("USDT", "-USDT"))
+        return list(dict.fromkeys(candidates))
+
     def server_time(self) -> dict[str, Any]:
         return self._request("GET", "/openApi/swap/v2/server/time")
 
@@ -68,6 +73,51 @@ class BingXClient:
             "/openApi/swap/v3/quote/klines",
             {"symbol": symbol, "interval": interval, "limit": limit},
         )
+
+    def set_margin_mode(self, symbol: str, margin_mode: str) -> dict:
+        normalized = "ISOLATED" if margin_mode.lower().startswith("isol") else "CROSSED"
+        last_exc: Exception | None = None
+        for candidate in self._symbol_candidates(symbol):
+            try:
+                return self._request(
+                    "POST",
+                    "/openApi/swap/v2/trade/marginType",
+                    {"symbol": candidate, "marginType": normalized},
+                )
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+        raise RuntimeError(f"set_margin_mode failed for {symbol}: {last_exc}")
+
+    def set_leverage(self, symbol: str, leverage: int, side: str | None = None) -> dict:
+        if leverage < 1:
+            raise ValueError("Leverage must be >= 1")
+
+        last_exc: Exception | None = None
+        for candidate in self._symbol_candidates(symbol):
+            params: dict[str, Any] = {"symbol": candidate, "leverage": int(leverage)}
+            if side:
+                params["side"] = side.upper()
+            try:
+                return self._request("POST", "/openApi/swap/v2/trade/leverage", params)
+            except RuntimeError as exc:
+                # signature fallback first
+                if "code=100001" in str(exc):
+                    try:
+                        return self._request_signed_sorted("POST", "/openApi/swap/v2/trade/leverage", params)
+                    except Exception as exc2:  # noqa: BLE001
+                        last_exc = exc2
+                        continue
+                # for one-way accounts, side may be rejected: retry without side
+                if side:
+                    try:
+                        return self._request("POST", "/openApi/swap/v2/trade/leverage", {"symbol": candidate, "leverage": int(leverage)})
+                    except Exception as exc2:  # noqa: BLE001
+                        last_exc = exc2
+                        continue
+                last_exc = exc
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+        raise RuntimeError(f"set_leverage failed for {symbol}: {last_exc}")
 
     def place_order(
         self,
