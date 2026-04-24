@@ -6,8 +6,8 @@ entry_timeframe: 1m
 trend_timeframe: 5m
 
 risk:
-  account_size_usdt: 1000
-  risk_per_trade: 0.005
+  account_size_usdt: 40
+  risk_per_trade: 0.01
   daily_loss_limit: 0.02
   max_open_positions: 2
   max_consecutive_losses: 3
@@ -17,8 +17,8 @@ risk:
 execution:
   margin_mode: isolated
   leverage:
-    BTC-USDT: 3
-    ETH-USDT: 3
+    BTC-USDT: 10
+    ETH-USDT: 10
   take_profit_pct: 0.006
   stop_loss_pct: 0.004
   stop_atr_mult: 1.2
@@ -37,7 +37,7 @@ filters:
   rsi_long_threshold: 50
   rsi_short_threshold: 50
   volume_ma_period: 20
-  require_volume_confirmation: true
+  require_volume_confirmation: false
   min_trend_gap_pct: 0.0005
   min_entry_rows: 80
   min_trend_rows: 100
