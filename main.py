@@ -83,6 +83,19 @@ def fetch_klines_with_fallback(
     return symbol, pd.DataFrame()
 
 
+
+
+def _leverage_for_symbol(execution: dict[str, Any], symbol: str) -> int:
+    raw = execution.get("leverage", {}).get(symbol)
+    if raw is None and "-" in symbol:
+        raw = execution.get("leverage", {}).get(symbol.replace("-", ""))
+    try:
+        lev = int(raw) if raw is not None else 1
+    except Exception:
+        lev = 1
+    return max(1, lev)
+
+
 def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
     risk = settings["risk"]
     execution = settings["execution"]
@@ -143,6 +156,22 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
         )
         if qty <= 0:
             logger.warning("%s skipped: invalid qty", symbol)
+            continue
+
+        leverage_assumed = _leverage_for_symbol(execution, symbol)
+        implied_notional = qty * current_price
+        margin_required = implied_notional / leverage_assumed
+        max_margin_usage = float(risk.get("max_margin_usage", 0.7))
+        margin_allowed = float(risk.get("account_size_usdt", 1000)) * max_margin_usage
+
+        if margin_required > margin_allowed:
+            logger.warning(
+                "%s skipped: insufficient margin guard margin_required=%.2f > allowed=%.2f (lev=%sx)",
+                symbol,
+                margin_required,
+                margin_allowed,
+                leverage_assumed,
+            )
             continue
 
         try:

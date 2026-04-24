@@ -89,6 +89,7 @@ En `config.yaml` puedes ajustar:
 - `no market data`: revisa símbolo (`BTC-USDT` / `ETH-USDT`), el bot también intenta fallback a `BTCUSDT`.
 - `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno. El cliente reintenta una firma alternativa si recibe `code=100001`.
 - `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
+- `Insufficient margin`: baja `risk_per_trade`, sube `stop_loss_pct`, o ajusta `risk.max_margin_usage`.
 - `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
 
 ## Build safety

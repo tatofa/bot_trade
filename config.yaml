@@ -12,6 +12,7 @@ risk:
   max_open_positions: 2
   max_consecutive_losses: 3
   max_position_loss_on_margin: 0.05
+  max_margin_usage: 0.7
 
 execution:
   margin_mode: isolated
