@@ -182,7 +182,7 @@ def main() -> None:
             executor = PaperExecutor()
             cfg.mode = "paper"
         else:
-            executor = LiveExecutor(client=client, execution_config=cfg.settings.get("execution", {}))
+            executor = LiveExecutor(client=client)
     else:
         executor = PaperExecutor()
 

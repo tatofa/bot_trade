@@ -99,12 +99,3 @@ En `config.yaml` puedes ajustar:
 
 
 Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes de operar en real.
-
-
-## Checklist paper/live
-
-1. Verifica `execution.margin_mode` y `execution.leverage` por símbolo en `config.yaml`.
-2. Ejecuta en paper y revisa logs: `configuring margin_mode=... leverage=...`, `margin mode configured`, `leverage configured`.
-3. En live, confirma que **no** aparece `failed to configure leverage/margin; order skipped`.
-4. Valida en BingX que el símbolo quedó en el leverage esperado (por ejemplo 3x) antes de cualquier entrada nueva.
-5. Si configuras leverage > 10x, el bot lo rechaza por seguridad.
