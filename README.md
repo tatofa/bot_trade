@@ -78,6 +78,7 @@ En `config.yaml` puedes ajustar:
 - `entry_timeframe` y `trend_timeframe`.
 - `filters.ema_fast` / `filters.ema_slow`.
 - `filters.trigger_mode`: `cross_only`, `cross_recent` o `cross_or_alignment` (menos estricto).
+- `filters.allow_countertrend_long` / `filters.allow_countertrend_short`: permite entradas contra tendencia si el trigger de cruce/alineación está activo.
 - `filters.cross_lookback`: cuántas velas atrás buscar cruce reciente.
 - `filters.ema_trend` y `filters.min_trend_gap_pct`.
 - `filters.require_volume_confirmation`.
@@ -90,6 +91,7 @@ En `config.yaml` puedes ajustar:
 - `signature/auth`: revisa API key/secret, permisos de futuros, y que no haya espacios extra en variables de entorno. El cliente reintenta una firma alternativa si recibe `code=100001`.
 - `order failed`: revisa permisos de API de futures, modo hedge/one-way y precisión mínima de cantidad.
 - `Insufficient margin`: baja `risk_per_trade`, sube `stop_loss_pct`, o ajusta `risk.max_margin_usage`.
+- Para evitar reintentos seguidos por margen insuficiente puedes usar `risk.insufficient_margin_cooldown_sec` (ej. `120`).
 - `merge conflict markers detected`: tu imagen fue construida con archivos en conflicto; redeploy desde el último commit limpio.
 
 ## Build safety

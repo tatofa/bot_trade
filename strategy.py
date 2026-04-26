@@ -123,8 +123,11 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
     rsi_ok_long = rsi_now > float(params.get("rsi_long_threshold", 50))
     rsi_ok_short = rsi_now < float(params.get("rsi_short_threshold", 50))
 
-    long_setup = trend_up and trend_has_impulse
-    short_setup = trend_down and trend_has_impulse
+    allow_countertrend_long = bool(params.get("allow_countertrend_long", False))
+    allow_countertrend_short = bool(params.get("allow_countertrend_short", False))
+
+    long_setup = (trend_up and trend_has_impulse) or (allow_countertrend_long and long_trigger)
+    short_setup = (trend_down and trend_has_impulse) or (allow_countertrend_short and short_trigger)
 
     diagnostics = {
         "trend_up": bool(trend_up),
@@ -139,6 +142,8 @@ def generate_signal(df_entry: pd.DataFrame, df_trend: pd.DataFrame, params: dict
         "vol_ok": bool(vol_ok),
         "trend_gap_pct": round(trend_gap, 5),
         "trigger_mode": trigger_mode,
+        "allow_countertrend_long": allow_countertrend_long,
+        "allow_countertrend_short": allow_countertrend_short,
     }
 
     entry_price = float(close_entry.iloc[-1])

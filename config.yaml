@@ -13,6 +13,7 @@ risk:
   max_consecutive_losses: 4
   max_position_loss_on_margin: 0.08
   max_margin_usage: 0.95
+  insufficient_margin_cooldown_sec: 120
 
 execution:
   margin_mode: isolated
@@ -32,6 +33,8 @@ filters:
   ema_slow: 21
   ema_trend: 50
   trigger_mode: cross_or_alignment # cross_only | cross_recent | cross_or_alignment
+  allow_countertrend_long: true
+  allow_countertrend_short: false
   cross_lookback: 5
   rsi_period: 14
   rsi_long_threshold: 45

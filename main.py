@@ -23,6 +23,7 @@ logging.basicConfig(level=_resolve_log_level(), format="%(asctime)s %(levelname)
 logger = logging.getLogger("bot_trade")
 
 LAST_SIGNAL_REASON: dict[str, str] = {}
+MARGIN_COOLDOWN_UNTIL: dict[str, float] = {}
 
 
 def _normalize_symbol_candidates(symbol: str) -> list[str]:
@@ -96,12 +97,25 @@ def _leverage_for_symbol(execution: dict[str, Any], symbol: str) -> int:
     return max(1, lev)
 
 
+def _is_insufficient_margin_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "101204" in message or "insufficient margin" in message
+
+
 def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
     risk = settings["risk"]
     execution = settings["execution"]
     filters = settings["filters"]
 
     for symbol in settings.get("symbols", []):
+        cooldown_sec = int(risk.get("insufficient_margin_cooldown_sec", 0))
+        cooldown_until = MARGIN_COOLDOWN_UNTIL.get(symbol, 0.0)
+        now = time.time()
+        if cooldown_sec > 0 and now < cooldown_until:
+            remaining = int(cooldown_until - now)
+            logger.info("%s skipped: margin cooldown active (%ss remaining)", symbol, remaining)
+            continue
+
         if executor.has_position(symbol):
             logger.info("%s skipped: already has position", symbol)
             continue
@@ -172,15 +186,21 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
                 margin_allowed,
                 leverage_assumed,
             )
+            if cooldown_sec > 0:
+                MARGIN_COOLDOWN_UNTIL[symbol] = time.time() + cooldown_sec
             continue
 
         try:
             executor.open_position(symbol, signal.side, qty, current_price, levels["stop"], levels["take_profit"])
         except Exception as exc:  # noqa: BLE001
             logger.error("%s order failed: %s", symbol, exc)
+            if cooldown_sec > 0 and _is_insufficient_margin_error(exc):
+                MARGIN_COOLDOWN_UNTIL[symbol] = time.time() + cooldown_sec
+                logger.warning("%s cooldown applied after insufficient margin error (%ss)", symbol, cooldown_sec)
             continue
 
         LAST_SIGNAL_REASON.pop(symbol, None)
+        MARGIN_COOLDOWN_UNTIL.pop(symbol, None)
         logger.info(
             "%s opened %s qty=%.4f entry=%.2f stop=%.2f tp=%.2f source_symbol=%s",
             symbol,
