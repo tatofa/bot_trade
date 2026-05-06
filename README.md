@@ -1,6 +1,6 @@
 # bot_trade
 
-Bot en Python para BingX Futures con señales de tendencia para `BTC-USDT` y `ETH-USDT`.
+Bot en Python para BingX Futures con señales de tendencia (configurable por símbolo).
 
 > Importante: por seguridad, el modo por defecto es **paper**.
 
@@ -75,6 +75,7 @@ git push -u origin <TU_RAMA>
 ## Ajuste de señales (scalping)
 
 En `config.yaml` puedes ajustar:
+- `symbols`: lista de mercados a escanear en cada ciclo (ej. `BTC-USDT`, `ETH-USDT`).
 - `entry_timeframe` y `trend_timeframe`.
 - `filters.ema_fast` / `filters.ema_slow`.
 - `filters.trigger_mode`: `cross_only`, `cross_recent` o `cross_or_alignment` (menos estricto).
@@ -84,6 +85,7 @@ En `config.yaml` puedes ajustar:
 - `filters.require_volume_confirmation`.
 - `filters.rsi_long_threshold` / `filters.rsi_short_threshold`.
 - `execution.take_profit_pct` / `execution.stop_loss_pct`.
+- `execution.leverage.<SYMBOL>`: leverage por símbolo (ej. `execution.leverage.BTC-USDT: 10`).
 
 ## Errores comunes
 
@@ -109,10 +111,10 @@ Este proyecto **no garantiza ganancias**. Haz backtesting y paper trading antes 
 Valores iniciales sugeridos para empezar a operar con cuenta pequeña:
 - `risk.account_size_usdt: 40`
 - `execution.leverage.BTC-USDT: 10`
-- `execution.leverage.ETH-USDT: 10`
 - `risk.max_margin_usage: 0.95`
 - `filters.require_volume_confirmation: false`
 - `filters.rsi_long_threshold: 45` / `filters.rsi_short_threshold: 55`
 - `filters.trigger_mode: cross_or_alignment` con `cross_lookback: 5`
+- `symbols: [BTC-USDT]` (si quieres operar también ETH, agrégalo en la lista)
 
 > Ajusta en vivo con cuidado; 10x es el máximo recomendado en esta plantilla.

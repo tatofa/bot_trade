@@ -106,8 +106,11 @@ def run_once(client: BingXClient, executor: Executor, settings: dict) -> None:
     risk = settings["risk"]
     execution = settings["execution"]
     filters = settings["filters"]
+    symbols = settings.get("symbols", [])
 
-    for symbol in settings.get("symbols", []):
+    logger.debug("scan cycle started symbols=%s", symbols)
+
+    for symbol in symbols:
         cooldown_sec = int(risk.get("insufficient_margin_cooldown_sec", 0))
         cooldown_until = MARGIN_COOLDOWN_UNTIL.get(symbol, 0.0)
         now = time.time()
@@ -236,6 +239,7 @@ def main() -> None:
         executor = PaperExecutor()
 
     logger.info("Bot started in %s mode", cfg.mode)
+    logger.info("Symbols configured: %s", cfg.settings.get("symbols", []))
     while True:
         try:
             run_once(client, executor, cfg.settings)
